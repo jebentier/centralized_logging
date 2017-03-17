@@ -7,3 +7,5 @@ From the root directory run `docker-compose build`
 From the root directory run `docker-compose up -d`
 ### Demo Logging
 To start the demo logging process run `docker exec -it centralizedlogging_logstash_1 /demo_logger.sh`
+### View Logs
+To watch the container logs run `docker-compose log -f`
