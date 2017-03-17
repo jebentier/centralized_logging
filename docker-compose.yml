@@ -71,6 +71,10 @@ services:
 
   log_consumer:
     build: ./log_consumer
+    environment:
+      KAFKA_SEED_BROKERS: 'kafka:9092'
+      LOG_CONSUMER_GROUP: 'centralized_log_consumer'
+      KAFKA_TOPIC: 'centralized_logs'
     networks:
       - elk
     depends_on:

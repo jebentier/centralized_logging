@@ -1,0 +1,26 @@
+#! /usr/bin/env ruby
+require 'kafka'
+require_relative 'lib/kafka_consumer'
+
+$stdout.sync = true
+Logger.new(STDOUT)
+LOG = Logger.new(STDOUT)
+LOG.level = Logger::DEBUG
+
+MAX_CONNECTION_ATTEMPTS = 5
+CONNECTION_ATTEMPT_WAIT = 5
+
+LOG.info "waiting to connect to kafka"
+sleep 20
+LOG.info "connecting to kafka"
+
+consumer = KafkaConsumer.with_seed_brokers(['kafka:9092'])
+consumer.consume(group_id: 'centralized_log_consumer', topic_id: 'centralized_logs') do |message|
+  LOG.info "#{message.offset}, #{message.key}, #{message.value}"
+end
+
+
+# kafka = Kafka.new(seed_brokers: ["kafka:9092"])
+# kafka.each_message(topic: "centralized_logs") do |message|
+#   LOG.info "#{message.offset}, #{message.key}, #{message.value}"
+# end
