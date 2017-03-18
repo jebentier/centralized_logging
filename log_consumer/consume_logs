@@ -40,13 +40,13 @@ consumer.consume(group_id: 'centralized_log_consumer', topic_id: 'centralized_lo
                           source: "front-end-1",
                           request_method: match["request_method"],
                           request_path: match["request_path"],
-                          network_id: path_match["network_id"],
-                          advertiser_id: path_match["advertiser_id"],
-                          advertiser_campaign_id: path_match["advertiser_campaign_id"],
+                          network_id: path_match["network_id"].to_i,
+                          advertiser_id: path_match["advertiser_id"].to_i,
+                          advertiser_campaign_id: path_match["advertiser_campaign_id"].to_i,
                           api_version: path_match["api_version"],
                           request_format: match["request_format"],
-                          response_code: match["response_code"],
-                          response_time_ms: match["response_time_ms"],
+                          response_code: match["response_code"].to_i,
+                          response_time_ms: match["response_time_ms"].to_i,
                           referrer: match["referrer"],
                           requesting_client: match["requesting_client"] })
 end
