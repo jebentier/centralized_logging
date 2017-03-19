@@ -32,13 +32,10 @@ module LogConsumer
       def parse_message_for_config(message, config)
         body = { "message" => message }
 
-        config[:split].each do |k, regex|
+        config[:split].each do |k, regexes|
+          regexes = regexes.is_a?(Array) ? regexes : [regexes]
           if thing_to_split = body[k.to_s]
-            match = if regex.is_a?(Array) # regex is an ordered list of highest -> lowest precedent patterns to match. Take the first that matches.
-                      regex.find { |pattern| split_message(thing_to_split, pattern) }
-                    else  # regex is a single pattern, match it against thing_to_split.
-                      split_message(thing_to_split, regex)
-                    end
+            match = regexes.find { |pattern| split_message(thing_to_split, pattern) }
             body.merge(match) if match
           end
         end
