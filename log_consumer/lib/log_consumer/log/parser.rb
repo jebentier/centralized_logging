@@ -16,25 +16,8 @@ module LogConsumer
             configs.each do |config|
               if config[:path].nil? || config[:path] == path || (config[:path].is_a?(Regexp) && path.match(config[:path]))
                 if config[:match].nil? || config[:match] == message || (config[:match].is_a?(Regexp) && message.match(config[:match]))
-                  body = { "message" => message }
-                  config[:split].each do |k, regex|
-                    if thing_to_split = body[k.to_s]
-                      if regex.is_a?(Array) # regex is an ordered list of highest -> lowest precedent patterns to match. Take the first that matches.
-                        regex.find do |pattern|
-                          if match = thing_to_split.match(regex)
-                            body.merge!(Hash[ match.names.zip( match.captures ) ])
-                          end
-                          !!match
-                        end
-                      else  # regex is a single pattern, match it against thing_to_split.
-                        match = thing_to_split.match(regex)
-                        body.merge!(Hash[ match.names.zip( match.captures ) ])
-                      end
-                    end
-                  end
-
                   entries[config[:index]] ||= []
-                  entries[config[:index]] << body
+                  entries[config[:index]] << parse_message_for_config(message, config)
                 end
               end
             end
@@ -45,6 +28,30 @@ module LogConsumer
       end
 
       private
+
+      def parse_message_for_config(message, config)
+        body = { "message" => message }
+
+        config[:split].each do |k, regex|
+          if thing_to_split = body[k.to_s]
+            match = if regex.is_a?(Array) # regex is an ordered list of highest -> lowest precedent patterns to match. Take the first that matches.
+                      regex.find { |pattern| split_message(thing_to_split, pattern) }
+                    else  # regex is a single pattern, match it against thing_to_split.
+                      split_message(thing_to_split, regex)
+                    end
+            body.merge(match) if match
+          end
+        end
+
+        body
+      end
+
+      def split_message(thing_to_split, regex)
+        match = thing_to_split.match(regex)
+        if match
+          Hash[match.names.zip(match.captures)]
+        end
+      end
 
       def load_matchers
         { all: [{ match: /api\//,
