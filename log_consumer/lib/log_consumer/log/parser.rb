@@ -84,8 +84,10 @@ module LogConsumer
       end
 
       def load_indexes
-        { "logstash-central-logging" => { api_version: { type: "keyword" },
-                                          timestamp:   { type: "date" } }
+        { "logstash-central-logging" => { api_version:              { type: "keyword" },
+                                          timestamp:                { type: "date" },
+                                          load_balancer_ip_address: { type: "ip" },
+                                          user_ip_address:          { type: "ip" } }
         }
       end
     end
