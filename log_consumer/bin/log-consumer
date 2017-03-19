@@ -6,3 +6,4 @@ require 'log_consumer'
 $stdout.sync = true
 
 LogConsumer::CLI.start(ARGV)
+
