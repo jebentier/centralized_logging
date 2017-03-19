@@ -6,10 +6,9 @@ RUN mkdir /src
 
 WORKDIR /src
 
-COPY ./Gemfile Gemfile
-RUN bundle install
-
 COPY ./ /src
 RUN chmod +x -R /src
 
-CMD "/src/consume_logs"
+RUN bundle install
+
+CMD ["bin/log-consumer", "start"]
