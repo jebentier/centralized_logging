@@ -18,6 +18,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'elasticsearch'
   gem.add_runtime_dependency 'terminal-table', '= 1.7.3'
   gem.add_runtime_dependency 'thor', '~> 0.19'
+  gem.add_runtime_dependency 'json'
 
   gem.add_development_dependency 'pry', '~> 0.10'
   gem.add_development_dependency 'rspec', '~> 3.5'

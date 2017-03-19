@@ -3,6 +3,7 @@ PATH
   specs:
     log_consumer (0.1.0)
       elasticsearch
+      json
       ruby-kafka
       terminal-table (= 1.7.3)
       thor (~> 0.19)

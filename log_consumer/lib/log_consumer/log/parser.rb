@@ -1,32 +1,57 @@
 module LogConsumer
   module Log
     class Parser
-      attr_reader :request_regex, :path_regex
+      attr_reader :matchers, :indexes
 
       def initialize
-        @request_regex = /(?<ip_address>(\d{1,3}\.){3}\d{1,3}).*\[(?<timestamp>.*)\].*(?<request_method>(GET|POST|PUT|DELETE))\s*(?<request_path>[^.]*)\.(?<request_format>\w+).*(?<response_code>\d{3}).*(?<response_time_ms>\d+)\s*"(?<referrer>[^"]*)"\s"(?<requesting_client>[^"]*)"/
-        @path_regex    = /\/api\/(?<api_version>[^\/]*)\/(?<network_id>\d+)\/advertisers\/(?<advertiser_id>\d+)\/advertiser_campaigns\/(?<advertiser_campaign_id>\d+)/
+        @matchers = load_matchers
+        @indexes  = load_indexes
       end
 
-      def parse(log)
-        match = log.match(request_regex)
-        path_match = match["request_path"].match(path_regex)
+      def parse(host:, path:, message:)
+        entries = {}
 
-        { "logstash-central_logging" => [{ timestamp:              match["timestamp"],
-                                           ip_address:             match["ip_address"],
-                                           source:                 "front-end-1",
-                                           request_method:         match["request_method"],
-                                           request_path:           match["request_path"],
-                                           network_id:             path_match["network_id"].to_i,
-                                           advertiser_id:          path_match["advertiser_id"].to_i,
-                                           advertiser_campaign_id: path_match["advertiser_campaign_id"].to_i,
-                                           api_version:            path_match["api_version"],
-                                           request_format:         match["request_format"],
-                                           response_code:          match["response_code"].to_i,
-                                           response_time_ms:       match["response_time_ms"].to_i,
-                                           referrer:               match["referrer"],
-                                           requesting_client:      match["requesting_client"],
-                                           message:                log }] }
+        matchers.each do |source, configs|
+          if source == :all || host == source || (source.is_a?(Regexp) && host.match(source))
+            configs.each do |config|
+              if config[:path].nil? || config[:path] == path || (config[:path].is_a?(Regexp) && path.match(config[:path]))
+                if config[:match].nil? || config[:match] == message || (config[:match].is_a?(Regexp) && message.match(config[:match]))
+                  body = { "message" => message }
+                  config[:split].each do |k, regex|
+                    if thing_to_split = body[k.to_s]
+                      match = thing_to_split.match(regex)
+                      body.merge!(Hash[ match.names.zip( match.captures ) ])
+                    end
+                  end
+
+                  entries[config[:index]] ||= []
+                  entries[config[:index]] << body
+                end
+              end
+            end
+          end
+        end
+
+        entries
+      end
+
+      private
+
+      def load_matchers
+        { all: [{ match: /api\//,
+                  index: "logstash-central-logging",
+                  split: {
+                             message: /(?<ip_address>(\d{1,3}\.){3}\d{1,3}).*\[(?<timestamp>.*)\].*(?<request_method>(GET|POST|PUT|DELETE))\s*(?<request_path>[^.]*)\.(?<request_format>\w+).*(?<response_code>\d{3}).*(?<response_time_ms>\d+)\s*"(?<referrer>[^"]*)"\s"(?<requesting_client>[^"]*)"/,
+                             request_path: /\/api\/(?<api_version>[^\/]*)\/(?<network_id>\d+)\/advertisers\/(?<advertiser_id>\d+)\/advertiser_campaigns\/(?<advertiser_campaign_id>\d+)/
+                         }
+                }]
+        }
+      end
+
+      def load_indexes
+        { "logstash-central-logging" => { api_version: { type: "keyword" },
+                                          timestamp:   { type: "date" } }
+        }
       end
     end
   end
