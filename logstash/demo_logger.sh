@@ -15,6 +15,6 @@ while true; do
   response_time=$(((RANDOM%200)+50))
   request_method=${REQUEST_METHODS[$RANDOM % ${#REQUEST_METHODS[@]} ]}
 
-  echo "66.249.65.$ip_tuple - - [$(date +%Y-%m-%dT%H:%M:%S)] \"$request_method /api/$api_version/$network_id/advertisers/$advertiser_id/advertiser_campaigns/$advertiser_campaign_id.json HTTP/1.1\" $response_code $response_time \"-\" \"Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)\"" >> /var/log/test.log
+  echo "10.0.2.28 9443 - 38.96.190.$ip_tuple [$(date +%Y-%m-%dT%H:%M:%S)]  \"invoca.net\" \"$request_method /api/$api_version/$network_id/advertisers/$advertiser_id/advertiser_campaigns.json?oauth_token=SgsggHhszUgp2JZIO_KmjtDZJv18-Mxz HTTP/1.1\" $response_code 6756 \"-\" \"-\" \"-\" \"-\" 0.798 0.798 ." >> /var/log/test.log
   sleep 1
 done
