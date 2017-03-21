@@ -32,7 +32,7 @@ module LogConsumer
         log = JSON.parse(message.value)
         log_parser.parse(host: log["host"], path: log["path"], message: log["message"]).each do |index, bodies|
           bodies.each do |body|
-            esclient.create(index: index, type: "type1", id: message.offset, body: body)
+            esclient.create(index: index, type: "type1", id: message.offset, body: body) rescue nil
           end
         end
       end

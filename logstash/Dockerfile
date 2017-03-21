@@ -10,4 +10,7 @@ RUN chmod 777 /var/log/test.log
 COPY demo_logger.sh /demo_logger.sh
 RUN chmod 777 /demo_logger.sh
 
+COPY production_unicorn.log /var/log/production_unicorn.log
+RUN chmod 777 /var/log/production_unicorn.log
+
 USER logstash

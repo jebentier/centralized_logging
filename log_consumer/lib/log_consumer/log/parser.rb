@@ -32,14 +32,26 @@ module LogConsumer
       def parse_message_for_config(message, config)
         body = { "message" => message }
 
-        config[:split].each do |k, regexes|
-          regexes = regexes.is_a?(Array) ? regexes : [regexes]
-          if thing_to_split = body[k.to_s]
-            regex = regexes.find { |pattern| thing_to_split =~ pattern }
-            match = split_message(thing_to_split, regex)
-            body.merge!(match) if match
+        if config[:split]
+          config[:split].each do |k, regexes|
+            regexes = regexes.is_a?(Array) ? regexes : [regexes]
+            if thing_to_split = body[k.to_s]
+              regex = regexes.find { |pattern| thing_to_split =~ pattern }
+              match = split_message(thing_to_split, regex)
+              body.merge!(match) if match
+            end
           end
         end
+
+        timestamp = if config[:timestamp_format] && body["timestamp"].is_a?(String)
+                      Time.strptime(body["timestamp"], config[:timestamp_format])
+                    elsif body["timestamp"].is_a?(String)
+                      Time.parse(body["timestamp"])
+                    else
+                      Time.now
+                    end
+
+        body["timestamp"] = timestamp.strftime("%Y-%m-%dT%H:%M:%S.%L")
 
         body
       end
@@ -52,7 +64,8 @@ module LogConsumer
       end
 
       def load_matchers
-        { all: [{ match: /api\//,
+        { all: [{ path:  /.*test\.log/,
+                  match: /api\//,
                   index: "logstash-central-logging",
                   split: {
                              message: /(?<load_balancer_ip_address>(\d{1,3}\.){3}\d{1,3})\s[^\s]*\s.*(?<user_ip_address>(\d{1,3}\.){3}\d{1,3}).*\[(?<timestamp>.*)\]\s*"(?<request_domain>([^"]*))".*(?<request_method>(GET|POST|PUT|DELETE))\s*(?<request_path>[^.]*)\.(?<request_format>\w+)?(\?(?<request_query>([^\s]*)))[^"]*"\s+(?<response_code>\d{3}).*/,
@@ -84,6 +97,14 @@ module LogConsumer
                                               /\/api\/(?<api_version>[^\/]*)\/(?<network_id>\d+)\/network/
                                            ]
                          }
+                },
+                { path: /.*unicorn.*/,
+                  match: /(\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3})\s/,
+                  index: "logstash-central-logging",
+                  split: {
+                      message: /(?<timestamp>(\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3}))\s(?<severity>\w+)\s*(?<message>(.|\n)*)/
+                  },
+                  timestamp_format: "%m/%d/%y %H:%M:%S.%L"
                 }]
         }
       end

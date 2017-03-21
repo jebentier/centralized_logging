@@ -10,7 +10,7 @@ module LogConsumer
       end
 
       def consume(group_id:, topic_id:, &block)
-        consumer = connection.consumer(group_id: group_id)
+        consumer = connection.consumer(group_id: group_id, offset_commit_threshold: 1)
         consumer.subscribe(topic_id)
 
         consumer.each_message do |message|
