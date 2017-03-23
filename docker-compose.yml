@@ -19,10 +19,10 @@ services:
       - elk
 
   logstash:
-    build: ./demo_env/logstash
+    build: ./test_env/logstash
     volumes:
-      - ./demo_env/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./demo_env/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./test_env/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./test_env/logstash/pipeline:/usr/share/logstash/pipeline
     ports:
       - "5000:5000"
     environment:
@@ -35,7 +35,7 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:5.2.1
     volumes:
-      - ./demo_env/kibana/config/:/usr/share/kibana/config
+      - ./test_env/kibana/config/:/usr/share/kibana/config
     ports:
       - "5601:5601"
     networks:
